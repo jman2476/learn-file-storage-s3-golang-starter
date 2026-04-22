@@ -1,10 +1,12 @@
 package main
 
 import (
-	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/bootdotdev/learn-file-storage-s3-golang-starter/internal/auth"
 	"github.com/google/uuid"
@@ -32,7 +34,6 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 
 	fmt.Println("uploading thumbnail for video", videoID, "by user", userID)
 
-	// TODO: implement the upload here
 	const maxMemory = 10 << 20
 	r.ParseMultipartForm(maxMemory)
 
@@ -45,11 +46,11 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 
 	contentType := header.Header.Get("Content-Type")
 
-	data, err := io.ReadAll(file)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Unable to read file", err)
-		return
-	}
+	// data, err := io.ReadAll(file)
+	// if err != nil {
+	// 	respondWithError(w, http.StatusBadRequest, "Unable to read file", err)
+	// 	return
+	// }
 
 	metadata, err := cfg.db.GetVideo(videoID)
 	if err != nil {
@@ -62,16 +63,19 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// videoThumbnails[videoID] = thumbnail{
-	// 	data:      data,
-	// 	mediaType: contentType,
-	// }
+	fileExt := strings.Split(contentType, "/")[1]
+	fileName := fmt.Sprintf("%s.%s", videoID, fileExt)
+	filePath := filepath.Join(cfg.assetsRoot, fileName)
+	thumbFile, err := os.Create(filePath)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error creating file", err)
+		return
+	}
 
-	dataBase64 := base64.StdEncoding.EncodeToString(data)
-	dataURL := fmt.Sprintf("data:%s;base64,%s", contentType, dataBase64)
+	_, err = io.Copy(thumbFile, file)
 
-	// newThumbnailURL := fmt.Sprintf("http://localhost:%s/api/thumbnails/%s", os.Getenv("PORT"), videoID)
-	metadata.ThumbnailURL = &dataURL
+	thumbnailURL := fmt.Sprintf("http://localhost:%s/assets/%s", os.Getenv("PORT"), fileName)
+	metadata.ThumbnailURL = &thumbnailURL
 
 	err = cfg.db.UpdateVideo(metadata)
 	if err != nil {
