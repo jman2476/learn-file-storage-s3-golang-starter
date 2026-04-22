@@ -1,3 +1,7 @@
+# Detached Fork of 'learn-file-storage-s3-golang-starter (Tubely)' from BootDev
+This repo was originally forked from [this repository](https://github.com/bootdotdev/learn-file-storage-s3-golang-starter/) by bootdotdev, and detached to preserve account activity from commits to this repo. Original README.md, along with links to the relavent bootdotdev course, are preserved below.
+
+
 # learn-file-storage-s3-golang-starter (Tubely)
 
 This repo contains the starter code for the Tubely application - the #1 tool for engagement bait - for the "Learn File Servers and CDNs with S3 and CloudFront" [course](https://www.boot.dev/courses/learn-file-servers-s3-cloudfront-golang) on [boot.dev](https://www.boot.dev)
