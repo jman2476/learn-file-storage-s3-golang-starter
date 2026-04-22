@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/bootdotdev/learn-file-storage-s3-golang-starter/internal/auth"
@@ -44,13 +46,11 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 	}
 	defer file.Close()
 
-	contentType := header.Header.Get("Content-Type")
-
-	// data, err := io.ReadAll(file)
-	// if err != nil {
-	// 	respondWithError(w, http.StatusBadRequest, "Unable to read file", err)
-	// 	return
-	// }
+	mediaType, _, err := mime.ParseMediaType(header.Header.Get("Content-Type"))
+	if !slices.Contains([]string{"image/jpg", "image/png"}, mediaType) || err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid file type", err)
+		return
+	}
 
 	metadata, err := cfg.db.GetVideo(videoID)
 	if err != nil {
@@ -63,7 +63,7 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	fileExt := strings.Split(contentType, "/")[1]
+	fileExt := strings.Split(mediaType, "/")[1]
 	fileName := fmt.Sprintf("%s.%s", videoID, fileExt)
 	filePath := filepath.Join(cfg.assetsRoot, fileName)
 	thumbFile, err := os.Create(filePath)
