@@ -124,8 +124,8 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 	}
 
 	newVideoURL := fmt.Sprintf(
-		"%s,%s",
-		cfg.s3Bucket, videoKey,
+		"https://%s/%s",
+		cfg.s3CfDistribution, videoKey,
 	)
 	metadata.VideoURL = &newVideoURL
 
@@ -137,12 +137,6 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 
 	cfg.s3Client.PutObject(r.Context(), &putObjArgs)
 
-	updatedMetadata, err := cfg.dbVideoToSignedVideo(metadata)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Unable to get URL", err)
-		return
-	}
-
-	respondWithJSON(w, http.StatusOK, updatedMetadata)
+	respondWithJSON(w, http.StatusOK, metadata)
 
 }

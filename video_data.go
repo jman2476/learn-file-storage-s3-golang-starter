@@ -5,10 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
-	"strings"
-	"time"
-
-	"github.com/bootdotdev/learn-file-storage-s3-golang-starter/internal/database"
 )
 
 type ffprobe struct {
@@ -63,23 +59,4 @@ func processVideoForFastStart(filePath string) (string, error) {
 
 	return processingPath, nil
 
-}
-
-func (cfg *apiConfig) dbVideoToSignedVideo(video database.Video) (database.Video, error) {
-	if video.VideoURL == nil {
-		return video, nil
-	}
-	vidURL := *video.VideoURL
-	bucket, key, ok := strings.Cut(vidURL, ",")
-	if !ok {
-		return database.Video{}, fmt.Errorf("Video has no URL")
-	}
-
-	presignedUrl, err := generatePresignedURL(cfg.s3Client, bucket, key, time.Minute)
-	if err != nil {
-		return database.Video{}, fmt.Errorf("Presigned URL error: %w", err)
-	}
-	video.VideoURL = &presignedUrl
-
-	return video, nil
 }
